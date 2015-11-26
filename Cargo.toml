@@ -1,0 +1,13 @@
+[package]
+
+name = "joist_store"
+version = "0.1.0"
+authors = ["Mike Dilger <mike@efx.co.nz>"]
+license = "MIT"
+
+[dependencies]
+log = "0.3"
+byteorder = "0.4"
+rustc-serialize = "0.3"
+postgres = "0.10"
+rust-crypto = "0.2"
