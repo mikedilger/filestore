@@ -1,6 +1,6 @@
 [package]
 
-name = "joist_store"
+name = "filestore"
 version = "0.1.0"
 authors = ["Mike Dilger <mike@efx.co.nz>"]
 license = "MIT"
