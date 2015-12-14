@@ -8,6 +8,7 @@ license = "MIT"
 [dependencies]
 log = "0.3"
 byteorder = "0.4"
-rustc-serialize = "0.3"
+rustc-serialize = { version = "0.3", optional = true }
+serde = { version = "0.6", optional = true }
 postgres = "0.10"
 rust-crypto = "0.2"

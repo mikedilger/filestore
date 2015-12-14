@@ -5,12 +5,12 @@ use std::fmt;
 use std::ops::Deref;
 use std::io::{Read,Write};
 
-use rustc_serialize::json::{Json,ToJson};
 use postgres::types::{ToSql,FromSql,Type,IsNull,SessionInfo};
 use postgres::error::Error::{WrongType};
 
 /// A key issued at storage, used to retrieve your file
-#[derive(PartialEq, Eq, Debug, Clone, RustcEncodable, RustcDecodable)]
+#[derive(PartialEq, Eq, Debug, Clone)]
+#[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub struct FileKey(pub String);
 
 impl fmt::Display for FileKey
@@ -29,10 +29,11 @@ impl Deref for FileKey {
     }
 }
 
-impl ToJson for FileKey {
-    fn to_json(&self) -> Json {
+#[cfg(feature = "rustc-serialize")]
+impl ::rustc_serialize::json::ToJson for FileKey {
+    fn to_json(&self) -> ::rustc_serialize::json::Json {
         let FileKey(ref s) = *self;
-        Json::String(s.clone())
+        ::rustc_serialize::json::Json::String(s.clone())
     }
 }
 
@@ -67,5 +68,23 @@ impl FromSql for FileKey {
     }
     fn accepts(ty: &Type) -> bool {
         <String as FromSql>::accepts(ty)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl ::serde::ser::Serialize for FileKey {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: ::serde::ser::Serializer
+    {
+        serializer.visit_str(&*self.0)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl ::serde::de::Deserialize for FileKey {
+    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+        where D: ::serde::de::Deserializer
+    {
+        Ok(FileKey(try!(::serde::Deserialize::deserialize(deserializer))))
     }
 }
