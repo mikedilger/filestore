@@ -5,6 +5,9 @@ version = "0.1.0"
 authors = ["Mike Dilger <mike@efx.co.nz>"]
 license = "MIT"
 
+[features]
+default = [ "rustc-serialize", "serde" ]
+
 [dependencies]
 log = "0.3"
 byteorder = "0.4"
