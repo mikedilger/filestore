@@ -7,6 +7,9 @@
 //! copy of each distinct file is stored, with potentially multiple
 //! references to it.
 
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+
 extern crate log;
 extern crate byteorder;
 extern crate crypto;
