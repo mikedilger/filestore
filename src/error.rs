@@ -56,7 +56,7 @@ impl StdError for Error {
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!( f.write_str(&*self.description()) );
-        if self.message.len() > 0 {
+        if ! self.message.is_empty() {
             try!( write!(f, " = {}", self.message) );
         }
         if self.cause().is_some() {

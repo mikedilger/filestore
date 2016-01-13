@@ -99,7 +99,7 @@ impl Storable for Vec<u8> {
         let mut buf: Vec<u8> = Vec::new();
         try!(file.read_to_end(&mut buf)
              .map_err(|e| { (e, "Unable to read to end of file") } ));
-        return Ok(buf);
+        Ok(buf)
     }
 }
 
@@ -123,7 +123,7 @@ fn storage_file_dir(storage_path: &Path, key: &FileKey) -> PathBuf {
 /// Returns short name of file that data will be stored into
 fn storage_file_name(key: &FileKey) -> String {
     let r: &str = &*key;
-    r[2..].to_string()
+    r[2..].to_owned()
 }
 
 /// Returns full PathBuf for file that data will be stored intoa
@@ -135,7 +135,7 @@ fn storage_file_path(storage_path: &Path, key: &FileKey) -> PathBuf
 /// Returns short name of file that refcount will be stored into
 fn storage_refcount_name(key: &FileKey) -> String {
     let r: &str = &*key;
-    (r[2..]).to_string() + ".refcount"
+    (r[2..]).to_owned() + ".refcount"
 }
 
 // Returns full PathBuf for file that refcount will be stored into

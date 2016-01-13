@@ -24,7 +24,7 @@ impl fmt::Display for FileKey
 impl Deref for FileKey {
     type Target = str;
 
-    fn deref<'a>(&'a self) -> &'a str {
+    fn deref(&self) -> &str {
         &*self.0
     }
 }
