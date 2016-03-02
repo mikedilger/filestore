@@ -17,6 +17,7 @@ extern crate crypto;
 extern crate rustc_serialize;
 #[cfg(feature = "serde")]
 extern crate serde;
+#[macro_use]
 extern crate postgres;
 
 pub mod error;

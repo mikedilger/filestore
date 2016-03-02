@@ -6,7 +6,7 @@ use std::ops::Deref;
 use std::io::{Read,Write};
 
 use postgres::types::{ToSql,FromSql,Type,IsNull,SessionInfo};
-use postgres::error::Error::{WrongType};
+use postgres::error::Error as PgError;
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -47,14 +47,7 @@ impl ToSql for FileKey {
     fn accepts(ty: &Type) -> bool {
         <String as ToSql>::accepts(ty)
     }
-    fn to_sql_checked(&self, ty: &Type, out: &mut Write, ctx: &SessionInfo)
-                      -> ::postgres::Result<IsNull>
-    {
-        if !<Self as ToSql>::accepts(ty) {
-            return Err(WrongType(ty.clone()));
-        }
-        self.to_sql(ty, out, ctx)
-    }
+    to_sql_checked!();
 }
 
 impl FromSql for FileKey {
@@ -62,8 +55,8 @@ impl FromSql for FileKey {
                          -> ::postgres::Result<FileKey> {
         let s: String = match FromSql::from_sql(ty,raw,ctx) {
             Ok(s) => s,
-            Err(_) => return Err(WrongType(ty.clone())),
-        };
+            Err(_) => return Err(PgError::Conversion(Box::new(WrongType::new(ty.clone())))),
+       };
         Ok(FileKey(s))
     }
     fn accepts(ty: &Type) -> bool {
@@ -86,5 +79,29 @@ impl ::serde::de::Deserialize for FileKey {
         where D: ::serde::de::Deserializer
     {
         Ok(FileKey(try!(::serde::Deserialize::deserialize(deserializer))))
+    }
+}
+
+// inner error for building postgres conversion errors
+#[derive(Debug)]
+pub struct WrongType(pub ::postgres::types::Type);
+
+impl fmt::Display for WrongType {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt,
+               "cannot convert to or from a Postgres value of type `{}`",
+               self.0)
+    }
+}
+
+impl ::std::error::Error for WrongType {
+    fn description(&self) -> &str {
+        "cannot convert to or from a Postgres value"
+    }
+}
+
+impl WrongType {
+    pub fn new(ty: ::postgres::types::Type) -> WrongType {
+        WrongType(ty)
     }
 }
