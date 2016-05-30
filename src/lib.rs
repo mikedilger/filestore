@@ -7,8 +7,13 @@
 //! copy of each distinct file is stored, with potentially multiple
 //! references to it.
 
+// For serde_macros
+#![feature(custom_derive, plugin)]
+
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
+
+#![plugin(serde_macros)]
 
 extern crate log;
 extern crate byteorder;

@@ -9,7 +9,7 @@ use postgres::types::{ToSql,FromSql,Type,IsNull,SessionInfo};
 use postgres::error::Error as PgError;
 
 /// A key issued at storage, used to retrieve your file
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub struct FileKey(pub String);
 
@@ -61,24 +61,6 @@ impl FromSql for FileKey {
     }
     fn accepts(ty: &Type) -> bool {
         <String as FromSql>::accepts(ty)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl ::serde::ser::Serialize for FileKey {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: ::serde::ser::Serializer
-    {
-        serializer.visit_str(&*self.0)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl ::serde::de::Deserialize for FileKey {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-        where D: ::serde::de::Deserializer
-    {
-        Ok(FileKey(try!(::serde::Deserialize::deserialize(deserializer))))
     }
 }
 
