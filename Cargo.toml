@@ -9,8 +9,7 @@ license = "MIT"
 default = [ "rustc-serialize", "serde", "serde_macros" ]
 
 [dependencies.postgres]
-git = "https://github.com/mikedilger/rust-postgres"
-branch = "serde8"
+version = ">= 0.11.11, < 0.12"
 
 [dependencies]
 log = "0.3"
