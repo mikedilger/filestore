@@ -8,12 +8,10 @@
 //! references to it.
 
 // For serde_macros
-#![feature(custom_derive, plugin)]
+#![feature(proc_macro)]
 
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
-
-#![plugin(serde_macros)]
 
 extern crate log;
 extern crate byteorder;
@@ -22,6 +20,9 @@ extern crate crypto;
 extern crate rustc_serialize;
 #[cfg(feature = "serde")]
 extern crate serde;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_derive;
 #[macro_use]
 extern crate postgres;
 
