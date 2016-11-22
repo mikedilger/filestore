@@ -5,7 +5,9 @@ use std::fmt;
 use std::ops::Deref;
 use std::io::{Read,Write};
 
+#[cfg(feature = "postgres")]
 use postgres::types::{ToSql,FromSql,Type,IsNull,SessionInfo};
+#[cfg(feature = "postgres")]
 use postgres::error::Error as PgError;
 
 /// A key issued at storage, used to retrieve your file
@@ -37,6 +39,7 @@ impl ::rustc_serialize::json::ToJson for FileKey {
     }
 }
 
+#[cfg(feature = "postgres")]
 impl ToSql for FileKey {
     fn to_sql<W: Write+?Sized>(&self, ty: &Type, mut out: &mut W, ctx: &SessionInfo)
             -> ::postgres::Result<IsNull>
@@ -50,6 +53,7 @@ impl ToSql for FileKey {
     to_sql_checked!();
 }
 
+#[cfg(feature = "postgres")]
 impl FromSql for FileKey {
     fn from_sql<R: Read>(ty: &Type, raw: &mut R, ctx: &SessionInfo)
                          -> ::postgres::Result<FileKey> {
@@ -65,9 +69,11 @@ impl FromSql for FileKey {
 }
 
 // inner error for building postgres conversion errors
+#[cfg(feature = "postgres")]
 #[derive(Debug)]
 pub struct WrongType(pub ::postgres::types::Type);
 
+#[cfg(feature = "postgres")]
 impl fmt::Display for WrongType {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt,
@@ -76,12 +82,14 @@ impl fmt::Display for WrongType {
     }
 }
 
+#[cfg(feature = "postgres")]
 impl ::std::error::Error for WrongType {
     fn description(&self) -> &str {
         "cannot convert to or from a Postgres value"
     }
 }
 
+#[cfg(feature = "postgres")]
 impl WrongType {
     pub fn new(ty: ::postgres::types::Type) -> WrongType {
         WrongType(ty)

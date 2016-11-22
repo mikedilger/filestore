@@ -23,6 +23,7 @@ extern crate serde;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde_derive;
+#[cfg(feature = "postgres")]
 #[macro_use]
 extern crate postgres;
 
