@@ -44,26 +44,102 @@ pub use filekey::FileKey;
 use hashable::Hashable;
 use storable::Storable;
 
+/// Store data from memory.  The returned `FileKey` can be used later to
+/// retrieve the data.
+pub fn store_data(storage_path: &Path, input: &Vec<u8>) -> Result<FileKey,Error>
+{
+    store(storage_path, input)
+}
 
-/// Returns PathBuf for directory that data will be stored into
+/// Store a copy of a file.  The returned `FileKey` can be used later to
+/// retrieve the file.
+///
+/// Copying is required as the input file may not be on the same filesystem as the
+/// storage path.
+pub fn store_file(storage_path: &Path, input: &Path) -> Result<FileKey,Error>
+{
+    store(storage_path, &input.to_path_buf())
+}
+
+/// Retrieve data into memory, using a `FileKey` that was returned from an earlier
+/// call to store_data()
+pub fn retrieve_data(storage_path: &Path, key: &FileKey) -> Option<Vec<u8>>
+{
+    let path = storage_file_path(storage_path, key);
+    match fs::metadata(&path) {
+        Err(_) => None,
+        Ok(_) => {
+            match Storable::retrieve(&path) {
+                Ok(p) => Some(p),
+                Err(_) => None,
+            }
+        }
+    }
+}
+
+/// Retrieve a file by learning it's storage path, using a `FileKey` that was
+/// returned from an earlier call to store_file().
+///
+/// The returned PathBuf is the path to the actual only copy of the stored file,
+/// it is not a copy. Do not delete it; use delete() for that purpose as it
+/// manages the refcount properly.
+pub fn retrieve_file(storage_path: &Path, key: &FileKey) -> Option<PathBuf>
+{
+    let pathbuf = storage_file_path(storage_path, key);
+    match fs::metadata(&pathbuf) {
+        Err(_) => None,
+        Ok(_) => {
+            match Storable::retrieve(&pathbuf) {
+                Ok(p) => Some(p),
+                Err(_) => None,
+            }
+        }
+    }
+}
+
+/// Delete stored data (or file) based on a `FileKey` that was returned
+/// from an earlier call to store_file() or store_data().
+pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(),Error>
+{
+    let path = storage_file_path(storage_path, key);
+
+    // Decrement the ref count
+    let mut refcount: u32 = try!(get_refcount(storage_path, key));
+    if refcount < 1 {
+        return Ok(()); // nothing to delete
+    }
+    refcount = refcount - 1;
+    try!(set_refcount(storage_path, key, refcount));
+
+    // Actually delete if there are no more references
+    if refcount < 1 {
+        try!( fs::remove_file( &path )
+              .map_err(|e| { (e, "Unable to remove file") } ));
+    }
+
+    Ok(())
+}
+
+
+// Returns PathBuf for directory that data will be stored into
 fn storage_file_dir(storage_path: &Path, key: &FileKey) -> PathBuf {
     let r: &str = &**key;
     storage_path.to_path_buf().join( &r[..2] )
 }
 
-/// Returns short name of file that data will be stored into
+// Returns short name of file that data will be stored into
 fn storage_file_name(key: &FileKey) -> String {
     let r: &str = &*key;
     r[2..].to_owned()
 }
 
-/// Returns full PathBuf for file that data will be stored intoa
+// Returns full PathBuf for file that data will be stored intoa
 fn storage_file_path(storage_path: &Path, key: &FileKey) -> PathBuf
 {
     storage_file_dir(storage_path, key).to_path_buf().join( &storage_file_name(key)[..] )
 }
 
-/// Returns short name of file that refcount will be stored into
+// Returns short name of file that refcount will be stored into
 fn storage_refcount_name(key: &FileKey) -> String {
     let r: &str = &*key;
     (r[2..]).to_owned() + ".refcount"
@@ -75,8 +151,8 @@ fn storage_refcount_path(storage_path: &Path, key: &FileKey) -> PathBuf
     storage_file_dir(storage_path, key).to_path_buf().join( &storage_refcount_name(key)[..] )
 }
 
-/// Store the input at the storage_path.  Hashes, uses that as a key and
-/// also the filename, and manages refcounts (in case it is pre-existing)
+// Store the input at the storage_path.  Hashes, uses that as a key and
+// also the filename, and manages refcounts (in case it is pre-existing)
 fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
                                  -> Result<FileKey,Error>
 {
@@ -111,70 +187,6 @@ fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
     refcount = refcount + 1;
     try!( set_refcount(storage_path, &key, refcount) );
     Ok( key )
-}
-
-/// Store data from memory
-pub fn store_data(storage_path: &Path, input: &Vec<u8>) -> Result<FileKey,Error>
-{
-    store(storage_path, input)
-}
-
-/// Store a file
-pub fn store_file(storage_path: &Path, input: &Path) -> Result<FileKey,Error>
-{
-    store(storage_path, &input.to_path_buf())
-}
-
-/// Retrieve into memory
-pub fn retrieve_data(storage_path: &Path, key: &FileKey) -> Option<Vec<u8>>
-{
-    let path = storage_file_path(storage_path, key);
-    match fs::metadata(&path) {
-        Err(_) => None,
-        Ok(_) => {
-            match Storable::retrieve(&path) {
-                Ok(p) => Some(p),
-                Err(_) => None,
-            }
-        }
-    }
-}
-
-/// Retrieve into a file
-pub fn retrieve_file(storage_path: &Path, key: &FileKey) -> Option<PathBuf>
-{
-    let pathbuf = storage_file_path(storage_path, key);
-    match fs::metadata(&pathbuf) {
-        Err(_) => None,
-        Ok(_) => {
-            match Storable::retrieve(&pathbuf) {
-                Ok(p) => Some(p),
-                Err(_) => None,
-            }
-        }
-    }
-}
-
-/// Delete.
-pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(),Error>
-{
-    let path = storage_file_path(storage_path, key);
-
-    // Decrement the ref count
-    let mut refcount: u32 = try!(get_refcount(storage_path, key));
-    if refcount < 1 {
-        return Ok(()); // nothing to delete
-    }
-    refcount = refcount - 1;
-    try!(set_refcount(storage_path, key, refcount));
-
-    // Actually delete if there are no more references
-    if refcount < 1 {
-        try!( fs::remove_file( &path )
-              .map_err(|e| { (e, "Unable to remove file") } ));
-    }
-
-    Ok(())
 }
 
 fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32,Error>
