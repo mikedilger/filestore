@@ -7,9 +7,6 @@
 //! copy of each distinct file is stored, with potentially multiple
 //! references to it.
 
-// For serde_macros
-#![feature(proc_macro)]
-
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
@@ -26,6 +23,8 @@ extern crate serde_derive;
 #[cfg(feature = "postgres")]
 #[macro_use]
 extern crate postgres;
+#[macro_use]
+extern crate postgres_derive;
 
 pub mod error;
 pub mod filekey;

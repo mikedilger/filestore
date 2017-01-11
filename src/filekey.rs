@@ -3,16 +3,11 @@
 
 use std::fmt;
 use std::ops::Deref;
-use std::io::{Read,Write};
-
-#[cfg(feature = "postgres")]
-use postgres::types::{ToSql,FromSql,Type,IsNull,SessionInfo};
-#[cfg(feature = "postgres")]
-use postgres::error::Error as PgError;
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
+#[cfg_attr(feature = "postgres", derive(ToSql, FromSql))]
 pub struct FileKey(pub String);
 
 impl fmt::Display for FileKey
@@ -36,35 +31,6 @@ impl ::rustc_serialize::json::ToJson for FileKey {
     fn to_json(&self) -> ::rustc_serialize::json::Json {
         let FileKey(ref s) = *self;
         ::rustc_serialize::json::Json::String(s.clone())
-    }
-}
-
-#[cfg(feature = "postgres")]
-impl ToSql for FileKey {
-    fn to_sql<W: Write+?Sized>(&self, ty: &Type, mut out: &mut W, ctx: &SessionInfo)
-            -> ::postgres::Result<IsNull>
-    {
-        let FileKey(ref s) = *self;
-        s.to_sql(ty, out, ctx)
-    }
-    fn accepts(ty: &Type) -> bool {
-        <String as ToSql>::accepts(ty)
-    }
-    to_sql_checked!();
-}
-
-#[cfg(feature = "postgres")]
-impl FromSql for FileKey {
-    fn from_sql<R: Read>(ty: &Type, raw: &mut R, ctx: &SessionInfo)
-                         -> ::postgres::Result<FileKey> {
-        let s: String = match FromSql::from_sql(ty,raw,ctx) {
-            Ok(s) => s,
-            Err(_) => return Err(PgError::Conversion(Box::new(WrongType::new(ty.clone())))),
-       };
-        Ok(FileKey(s))
-    }
-    fn accepts(ty: &Type) -> bool {
-        <String as FromSql>::accepts(ty)
     }
 }
 
