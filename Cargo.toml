@@ -6,7 +6,7 @@ authors = ["Mike Dilger <mike@efx.co.nz>"]
 license = "MIT"
 
 [features]
-default = [ "rustc-serialize", "serde", "serde_derive", "postgres", "postgres-derive" ]
+default = [ "rustc-serialize", "serde", "serde_derive", "postgres" ]
 
 [dependencies]
 log = "0.3"
@@ -17,4 +17,4 @@ serde_derive = { version = "0.8", optional = true }
 rust-crypto = "0.2"
 clippy = { version = "0.0", optional = true }
 postgres = { version = "0.13", optional = true }
-postgres-derive = { version = "0.2", optional = true }
+phf_codegen = "0.7"

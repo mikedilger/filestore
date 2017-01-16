@@ -23,8 +23,6 @@ extern crate serde_derive;
 #[cfg(feature = "postgres")]
 #[macro_use]
 extern crate postgres;
-#[macro_use]
-extern crate postgres_derive;
 
 pub mod error;
 pub mod filekey;

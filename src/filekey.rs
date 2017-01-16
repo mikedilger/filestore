@@ -3,12 +3,46 @@
 
 use std::fmt;
 use std::ops::Deref;
+use std::error::Error as StdError;
+
+use postgres::types::{ToSql, FromSql, Type, IsNull, SessionInfo};
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
-#[cfg_attr(feature = "postgres", derive(ToSql, FromSql))]
 pub struct FileKey(pub String);
+
+impl ToSql for FileKey {
+    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>, ctx: &SessionInfo)
+              -> Result<IsNull, Box<StdError + Sync + Send>>
+        where Self: Sized
+    {
+        // use the inner type
+        self.0.to_sql(ty,out,ctx)
+    }
+
+    accepts!(Type::Text);
+
+    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>, ctx: &SessionInfo)
+                      -> Result<IsNull, Box<StdError + Sync + Send>>
+        where Self: Sized
+    {
+        // use the inner type
+        self.0.to_sql_checked(ty,out,ctx)
+    }
+}
+
+impl FromSql for FileKey {
+    fn from_sql(ty: &Type, raw: &[u8], ctx: &SessionInfo)
+                -> Result<Self, Box<StdError + Sync + Send>>
+    {
+        // use the inner type
+        let s = try!(<String>::from_sql(ty, raw, ctx));
+        Ok(FileKey(s))
+    }
+
+    accepts!(Type::Text);
+}
 
 impl fmt::Display for FileKey
 {
