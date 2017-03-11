@@ -7,30 +7,16 @@ use std::io;
 
 use log::LogLevel;
 
-#[derive(Debug)]
-pub enum ErrorKind
-{
-    Io(io::Error),
-    NotFound,
-}
-
 pub struct Error {
-    pub kind: ErrorKind,
+    pub io: io::Error,
     pub message: String,
 }
 
 impl Error {
-    pub fn new(kind: ErrorKind) -> Self {
-        Error {
-            kind: kind,
-            message: "".to_owned(),
-        }
-    }
-
     pub fn log_level(&self) -> LogLevel {
-        match self.kind {
-            ErrorKind::Io(_) => LogLevel::Warn,
-            ErrorKind::NotFound => LogLevel::Debug,
+        match self.io.kind() {
+            io::ErrorKind::NotFound => LogLevel::Debug,
+            _ => LogLevel::Warn,
         }
     }
 }
@@ -38,17 +24,11 @@ impl Error {
 impl StdError for Error {
     fn description(&self) -> &str
     {
-        match self.kind {
-            ErrorKind::Io(_) => "I/O Error",
-            ErrorKind::NotFound => "Not Found",
-        }
+        self.io.description()
     }
 
     fn cause(&self) -> Option<&StdError> {
-        match self.kind {
-            ErrorKind::Io(ref e) => Some(e),
-            _ => None
-        }
+        self.io.cause()
     }
 }
 
@@ -69,28 +49,31 @@ impl fmt::Debug for Error {
 // This is for the end user
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.kind {
-            ErrorKind::Io(ref e) => {
-                try!(write!(f, "{}: ", self.description()));
-                e.fmt(f) // trust upstream?
-            },
-            ErrorKind::NotFound => {
+        match self.io.kind() {
+            io::ErrorKind::NotFound => {
                 write!(f, "The file requested was not found.")
             }
+            _ => {
+                try!(write!(f, "{}: ", self.io.description()));
+                self.io.fmt(f) // trust upstream?
+            },
         }
     }
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
-        Error::new( ErrorKind::Io(err) )
+        Error {
+            io: err,
+            message: "".to_owned()
+        }
     }
 }
 
 impl<'a> From<(io::Error, &'a str)> for Error {
-    fn from((e, message): (io::Error, &'a str)) -> Error {
+    fn from((err, message): (io::Error, &'a str)) -> Error {
         Error {
-            kind: ErrorKind::Io(e),
+            io: err,
             message: message.to_owned(),
         }
     }

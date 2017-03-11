@@ -10,7 +10,7 @@ default = [ "rustc-serialize", "serde", "serde_derive", "postgres" ]
 
 [dependencies]
 log = "0.3"
-byteorder = "0.4"
+byteorder = "1.0.0"
 rustc-serialize = { version = "0.3", optional = true }
 serde = { version = "0.8", optional = true }
 serde_derive = { version = "0.8", optional = true }

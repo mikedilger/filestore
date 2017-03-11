@@ -36,7 +36,7 @@ use std::path::{Path,PathBuf};
 
 use byteorder::{ReadBytesExt,WriteBytesExt,BigEndian};
 
-use error::{Error,ErrorKind};
+use error::Error;
 
 pub use filekey::FileKey;
 use hashable::Hashable;
@@ -44,7 +44,7 @@ use storable::Storable;
 
 /// Store data from memory.  The returned `FileKey` can be used later to
 /// retrieve the data.
-pub fn store_data(storage_path: &Path, input: &Vec<u8>) -> Result<FileKey,Error>
+pub fn store_data(storage_path: &Path, input: &Vec<u8>) -> Result<FileKey, Error>
 {
     store(storage_path, input)
 }
@@ -54,7 +54,7 @@ pub fn store_data(storage_path: &Path, input: &Vec<u8>) -> Result<FileKey,Error>
 ///
 /// Copying is required as the input file may not be on the same filesystem as the
 /// storage path.
-pub fn store_file(storage_path: &Path, input: &Path) -> Result<FileKey,Error>
+pub fn store_file(storage_path: &Path, input: &Path) -> Result<FileKey, Error>
 {
     store(storage_path, &input.to_path_buf())
 }
@@ -97,7 +97,7 @@ pub fn retrieve_file(storage_path: &Path, key: &FileKey) -> Option<PathBuf>
 
 /// Delete stored data (or file) based on a `FileKey` that was returned
 /// from an earlier call to store_file() or store_data().
-pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(),Error>
+pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(), Error>
 {
     let path = storage_file_path(storage_path, key);
 
@@ -152,7 +152,7 @@ fn storage_refcount_path(storage_path: &Path, key: &FileKey) -> PathBuf
 // Store the input at the storage_path.  Hashes, uses that as a key and
 // also the filename, and manages refcounts (in case it is pre-existing)
 fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
-                                 -> Result<FileKey,Error>
+                                 -> Result<FileKey, Error>
 {
     let key: FileKey = FileKey(try!(input.hash()));
 
@@ -187,7 +187,7 @@ fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
     Ok( key )
 }
 
-fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32,Error>
+fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32, Error>
 {
     let storage_refcount_path = storage_refcount_path(storage_path, key);
     match fs::metadata(&storage_refcount_path) {
@@ -197,9 +197,10 @@ fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32,Error>
             match f.read_u32::<BigEndian>() {
                 Ok(u) => Ok(u),
                 Err(e) => {
-                    match e {
-                        ::byteorder::Error::UnexpectedEOF => Ok(0),
-                        ::byteorder::Error::Io(e) => Err( From::from(e) ),
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        Ok(0)
+                    } else {
+                        Err(From::from(e))
                     }
                 }
             }
@@ -215,7 +216,7 @@ fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32,Error>
     }
 }
 
-fn set_refcount(storage_path: &Path, key: &FileKey, refcount: u32) -> Result<(),Error>
+fn set_refcount(storage_path: &Path, key: &FileKey, refcount: u32) -> Result<(), Error>
 {
     let storage_refcount_path = storage_refcount_path(storage_path, key);
 
@@ -229,13 +230,7 @@ fn set_refcount(storage_path: &Path, key: &FileKey, refcount: u32) -> Result<(),
     // Otherwise, write the new refcount
     let mut f = try!( OpenOptions::new()
                       .create(true).write(true).truncate(true).open(&storage_refcount_path)
-                      .map_err(|e| { (e, "Unable to open/create new refcount file") } ));
-    if let Err(e) = f.write_u32::<BigEndian>(refcount) {
-        match e {
-            ::byteorder::Error::UnexpectedEOF => return Err(
-                Error::new(ErrorKind::Io(io::Error::new(io::ErrorKind::Other, e)))),
-            ::byteorder::Error::Io(e) => return Err( From::from(e) ),
-        }
-    }
+                      .map_err(|e| { (e, "Unable to open/create new refcount file") } ) );
+    try!(f.write_u32::<BigEndian>(refcount));
     Ok(())
 }

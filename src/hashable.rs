@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::io::Read;
 use crypto::sha2::Sha224;
 use crypto::digest::Digest;
-use error::Error;
+use super::Error;
 
 /// A private trait Hashable (with Sha224 only)
 pub trait Hashable {
@@ -13,7 +13,7 @@ pub trait Hashable {
 }
 
 impl Hashable for Vec<u8> {
-    fn hash(&self) -> Result<String,Error> {
+    fn hash(&self) -> Result<String, Error> {
         // Start the hash
         let mut hash = Box::new(Sha224::new());
 
@@ -26,7 +26,7 @@ impl Hashable for Vec<u8> {
 }
 
 impl Hashable for PathBuf {
-    fn hash(&self) -> Result<String,Error> {
+    fn hash(&self) -> Result<String, Error> {
         // Start the hash
         let mut hash = Box::new(Sha224::new());
 
