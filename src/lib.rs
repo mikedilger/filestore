@@ -13,8 +13,6 @@
 extern crate log;
 extern crate byteorder;
 extern crate crypto;
-#[cfg(feature = "rustc-serialize")]
-extern crate rustc_serialize;
 #[cfg(feature = "serde")]
 extern crate serde;
 #[cfg(feature = "serde")]

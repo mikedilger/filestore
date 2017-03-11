@@ -9,7 +9,6 @@ use postgres::types::{ToSql, FromSql, Type, IsNull};
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "rustc-serialize", derive(RustcEncodable, RustcDecodable))]
 pub struct FileKey(pub String);
 
 impl ToSql for FileKey {
@@ -57,14 +56,6 @@ impl Deref for FileKey {
 
     fn deref(&self) -> &str {
         &*self.0
-    }
-}
-
-#[cfg(feature = "rustc-serialize")]
-impl ::rustc_serialize::json::ToJson for FileKey {
-    fn to_json(&self) -> ::rustc_serialize::json::Json {
-        let FileKey(ref s) = *self;
-        ::rustc_serialize::json::Json::String(s.clone())
     }
 }
 
