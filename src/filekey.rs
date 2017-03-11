@@ -5,7 +5,7 @@ use std::fmt;
 use std::ops::Deref;
 use std::error::Error as StdError;
 
-use postgres::types::{ToSql, FromSql, Type, IsNull, SessionInfo};
+use postgres::types::{ToSql, FromSql, Type, IsNull};
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
@@ -13,31 +13,31 @@ use postgres::types::{ToSql, FromSql, Type, IsNull, SessionInfo};
 pub struct FileKey(pub String);
 
 impl ToSql for FileKey {
-    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>, ctx: &SessionInfo)
+    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>)
               -> Result<IsNull, Box<StdError + Sync + Send>>
         where Self: Sized
     {
         // use the inner type
-        self.0.to_sql(ty,out,ctx)
+        self.0.to_sql(ty,out)
     }
 
     accepts!(Type::Text);
 
-    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>, ctx: &SessionInfo)
+    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>)
                       -> Result<IsNull, Box<StdError + Sync + Send>>
         where Self: Sized
     {
         // use the inner type
-        self.0.to_sql_checked(ty,out,ctx)
+        self.0.to_sql_checked(ty,out)
     }
 }
 
 impl FromSql for FileKey {
-    fn from_sql(ty: &Type, raw: &[u8], ctx: &SessionInfo)
+    fn from_sql(ty: &Type, raw: &[u8])
                 -> Result<Self, Box<StdError + Sync + Send>>
     {
         // use the inner type
-        let s = try!(<String>::from_sql(ty, raw, ctx));
+        let s = try!(<String>::from_sql(ty, raw));
         Ok(FileKey(s))
     }
 
