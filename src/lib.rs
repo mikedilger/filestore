@@ -1,7 +1,7 @@
 // Copyright © 2014 - 2015 by Optimal Computing Limited (of New Zealand)
 // This code is licensed under the MIT license (see LICENSE-MIT for details)
 
-//! joist_store is a crate that handles storage and retrieval of files.
+//! `filestore` is a crate that handles storage and retrieval of files.
 //! Files are stored along with a filename, retrieved via a key issued
 //! at storage.  Content is deduplicated at storage time, so only one
 //! copy of each distinct file is stored, with potentially multiple
@@ -56,7 +56,7 @@ pub fn store_file(storage_path: &Path, input: &Path) -> Result<FileKey, Error>
 }
 
 /// Retrieve data into memory, using a `FileKey` that was returned from an earlier
-/// call to store_data()
+/// call to `store_data()`
 pub fn retrieve_data(storage_path: &Path, key: &FileKey) -> Option<Vec<u8>>
 {
     let path = storage_file_path(storage_path, key);
@@ -72,10 +72,10 @@ pub fn retrieve_data(storage_path: &Path, key: &FileKey) -> Option<Vec<u8>>
 }
 
 /// Retrieve a file by learning it's storage path, using a `FileKey` that was
-/// returned from an earlier call to store_file().
+/// returned from an earlier call to `store_file()`.
 ///
-/// The returned PathBuf is the path to the actual only copy of the stored file,
-/// it is not a copy. Do not delete it; use delete() for that purpose as it
+/// The returned `PathBuf` is the path to the actual only copy of the stored file,
+/// it is not a copy. Do not delete it; use `delete()` for that purpose as it
 /// manages the refcount properly.
 pub fn retrieve_file(storage_path: &Path, key: &FileKey) -> Option<PathBuf>
 {
@@ -92,7 +92,7 @@ pub fn retrieve_file(storage_path: &Path, key: &FileKey) -> Option<PathBuf>
 }
 
 /// Delete stored data (or file) based on a `FileKey` that was returned
-/// from an earlier call to store_file() or store_data().
+/// from an earlier call to `store_file()` or `store_data()`.
 pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(), Error>
 {
     let path = storage_file_path(storage_path, key);
@@ -102,7 +102,7 @@ pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(), Error>
     if refcount < 1 {
         return Ok(()); // nothing to delete
     }
-    refcount = refcount - 1;
+    refcount -= 1;
     try!(set_refcount(storage_path, key, refcount));
 
     // Actually delete if there are no more references
@@ -115,7 +115,7 @@ pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(), Error>
 }
 
 
-// Returns PathBuf for directory that data will be stored into
+// Returns `PathBuf` for directory that data will be stored into
 fn storage_file_dir(storage_path: &Path, key: &FileKey) -> PathBuf {
     let r: &str = &**key;
     storage_path.to_path_buf().join( &r[..2] )
@@ -127,7 +127,7 @@ fn storage_file_name(key: &FileKey) -> String {
     r[2..].to_owned()
 }
 
-// Returns full PathBuf for file that data will be stored intoa
+// Returns full `PathBuf` for file that data will be stored intoa
 fn storage_file_path(storage_path: &Path, key: &FileKey) -> PathBuf
 {
     storage_file_dir(storage_path, key).to_path_buf().join( &storage_file_name(key)[..] )
@@ -139,7 +139,7 @@ fn storage_refcount_name(key: &FileKey) -> String {
     (r[2..]).to_owned() + ".refcount"
 }
 
-// Returns full PathBuf for file that refcount will be stored into
+// Returns full `PathBuf` for file that refcount will be stored into
 fn storage_refcount_path(storage_path: &Path, key: &FileKey) -> PathBuf
 {
     storage_file_dir(storage_path, key).to_path_buf().join( &storage_refcount_name(key)[..] )
@@ -178,7 +178,7 @@ fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
 
     // Increment the ref count
     let mut refcount: u32 = try!( get_refcount(storage_path, &key) );
-    refcount = refcount + 1;
+    refcount += 1;
     try!( set_refcount(storage_path, &key, refcount) );
     Ok( key )
 }
