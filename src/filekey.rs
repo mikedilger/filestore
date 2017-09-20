@@ -5,7 +5,7 @@ use std::fmt;
 use std::ops::Deref;
 use std::error::Error as StdError;
 
-use postgres::types::{ToSql, FromSql, Type, IsNull};
+use postgres::types::{ToSql, FromSql, Type, IsNull, TEXT};
 
 /// A key issued at storage, used to retrieve your file
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ impl ToSql for FileKey {
         self.0.to_sql(ty,out)
     }
 
-    accepts!(Type::Text);
+    accepts!(TEXT);
 
     fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>)
                       -> Result<IsNull, Box<StdError + Sync + Send>>
@@ -40,7 +40,7 @@ impl FromSql for FileKey {
         Ok(FileKey(s))
     }
 
-    accepts!(Type::Text);
+    accepts!(TEXT);
 }
 
 impl fmt::Display for FileKey
