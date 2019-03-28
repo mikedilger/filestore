@@ -5,7 +5,7 @@ use std::fmt;
 use std::error::Error as StdError;
 use std::io;
 
-use log::LogLevel;
+use log::Level;
 
 pub struct Error {
     pub io: io::Error,
@@ -13,10 +13,10 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn log_level(&self) -> LogLevel {
+    pub fn log_level(&self) -> Level {
         match self.io.kind() {
-            io::ErrorKind::NotFound => LogLevel::Debug,
-            _ => LogLevel::Warn,
+            io::ErrorKind::NotFound => Level::Debug,
+            _ => Level::Warn,
         }
     }
 }
