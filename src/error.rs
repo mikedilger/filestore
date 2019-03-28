@@ -27,8 +27,8 @@ impl StdError for Error {
         self.io.description()
     }
 
-    fn cause(&self) -> Option<&StdError> {
-        self.io.cause()
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        self.io.source()
     }
 }
 
@@ -39,8 +39,8 @@ impl fmt::Debug for Error {
         if ! self.message.is_empty() {
             try!( write!(f, " = {}", self.message) );
         }
-        if self.cause().is_some() {
-            try!( write!(f, ": {:?}", self.cause().unwrap()) );
+        if self.source().is_some() {
+            try!( write!(f, ": {:?}", self.source().unwrap()) );
         }
         Ok(())
     }
