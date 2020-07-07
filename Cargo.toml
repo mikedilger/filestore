@@ -6,7 +6,7 @@ license = "MIT"
 edition = "2018"
 
 [features]
-default = [ "serde", "postgres" ]
+default = [ "serde", "postgres", "postgres-types" ]
 
 [dependencies]
 log = "0.4"
@@ -14,5 +14,6 @@ byteorder = "1.3"
 serde = { version = "1.0", optional = true, features = ["derive"] }
 rust-crypto = "0.2"
 clippy = { version = "0.0", optional = true }
-postgres = { version = "0.15", optional = true }
+postgres = { version = "0.17", optional = true }
+postgres-types = { version = "0.1", features = ["derive"], optional = true }
 phf_codegen = "0.7"

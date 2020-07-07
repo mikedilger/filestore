@@ -3,46 +3,16 @@
 
 use std::fmt;
 use std::ops::Deref;
-use std::error::Error as StdError;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
-use postgres::types::{ToSql, FromSql, Type, IsNull, TEXT};
+#[cfg(feature = "postgres")]
+use postgres::types::{ToSql, FromSql};
 
 /// A key issued at storage, used to retrieve your file
-#[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "postgres", derive(ToSql, FromSql))]
 pub struct FileKey(pub String);
-
-impl ToSql for FileKey {
-    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>)
-              -> Result<IsNull, Box<dyn StdError + Sync + Send>>
-        where Self: Sized
-    {
-        // use the inner type
-        self.0.to_sql(ty,out)
-    }
-
-    accepts!(TEXT);
-
-    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>)
-                      -> Result<IsNull, Box<dyn StdError + Sync + Send>>
-        where Self: Sized
-    {
-        // use the inner type
-        self.0.to_sql_checked(ty,out)
-    }
-}
-
-impl FromSql for FileKey {
-    fn from_sql(ty: &Type, raw: &[u8])
-                -> Result<Self, Box<dyn StdError + Sync + Send>>
-    {
-        // use the inner type
-        let s = <String>::from_sql(ty, raw)?;
-        Ok(FileKey(s))
-    }
-
-    accepts!(TEXT);
-}
 
 impl fmt::Display for FileKey
 {

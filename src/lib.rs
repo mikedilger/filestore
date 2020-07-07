@@ -16,7 +16,6 @@ extern crate crypto;
 #[cfg(feature = "serde")]
 extern crate serde;
 #[cfg(feature = "postgres")]
-#[macro_use]
 extern crate postgres;
 
 pub mod error;
