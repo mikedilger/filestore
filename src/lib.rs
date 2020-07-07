@@ -14,8 +14,7 @@ extern crate log;
 extern crate byteorder;
 extern crate crypto;
 #[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_derive;
+extern crate serde;
 #[cfg(feature = "postgres")]
 #[macro_use]
 extern crate postgres;
