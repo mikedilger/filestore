@@ -22,11 +22,6 @@ impl Error {
 }
 
 impl StdError for Error {
-    fn description(&self) -> &str
-    {
-        self.io.description()
-    }
-
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.io.source()
     }
@@ -35,7 +30,7 @@ impl StdError for Error {
 // This is for the Developer and Log files
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&*self.description())?;
+        f.write_str(&*self.io.to_string())?;
         if ! self.message.is_empty() {
             write!(f, " = {}", self.message)?;
         }
@@ -54,7 +49,7 @@ impl fmt::Display for Error {
                 write!(f, "The file requested was not found.")
             }
             _ => {
-                write!(f, "{}: ", self.io.description())?;
+                write!(f, "{}: ", self.io.to_string())?;
                 self.io.fmt(f) // trust upstream?
             },
         }
