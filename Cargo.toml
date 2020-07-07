@@ -1,9 +1,9 @@
 [package]
-
 name = "filestore"
 version = "0.4.1"
 authors = ["Mike Dilger <mike@efx.co.nz>"]
 license = "MIT"
+edition = "2018"
 
 [features]
 default = [ "serde", "postgres" ]
