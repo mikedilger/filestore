@@ -13,7 +13,7 @@ pub struct FileKey(pub String);
 
 impl ToSql for FileKey {
     fn to_sql(&self, ty: &Type, out: &mut Vec<u8>)
-              -> Result<IsNull, Box<StdError + Sync + Send>>
+              -> Result<IsNull, Box<dyn StdError + Sync + Send>>
         where Self: Sized
     {
         // use the inner type
@@ -23,7 +23,7 @@ impl ToSql for FileKey {
     accepts!(TEXT);
 
     fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>)
-                      -> Result<IsNull, Box<StdError + Sync + Send>>
+                      -> Result<IsNull, Box<dyn StdError + Sync + Send>>
         where Self: Sized
     {
         // use the inner type
@@ -33,7 +33,7 @@ impl ToSql for FileKey {
 
 impl FromSql for FileKey {
     fn from_sql(ty: &Type, raw: &[u8])
-                -> Result<Self, Box<StdError + Sync + Send>>
+                -> Result<Self, Box<dyn StdError + Sync + Send>>
     {
         // use the inner type
         let s = <String>::from_sql(ty, raw)?;
