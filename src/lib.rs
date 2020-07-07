@@ -98,17 +98,17 @@ pub fn delete(storage_path: &Path, key: &FileKey) -> Result<(), Error>
     let path = storage_file_path(storage_path, key);
 
     // Decrement the ref count
-    let mut refcount: u32 = try!(get_refcount(storage_path, key));
+    let mut refcount: u32 = get_refcount(storage_path, key)?;
     if refcount < 1 {
         return Ok(()); // nothing to delete
     }
     refcount -= 1;
-    try!(set_refcount(storage_path, key, refcount));
+    set_refcount(storage_path, key, refcount)?;
 
     // Actually delete if there are no more references
     if refcount < 1 {
-        try!( fs::remove_file( &path )
-              .map_err(|e| { (e, "Unable to remove file") } ));
+        fs::remove_file( &path )
+            .map_err(|e| { (e, "Unable to remove file") } )?;
     }
 
     Ok(())
@@ -150,7 +150,7 @@ fn storage_refcount_path(storage_path: &Path, key: &FileKey) -> PathBuf
 fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
                                  -> Result<FileKey, Error>
 {
-    let key: FileKey = FileKey(try!(input.hash()));
+    let key: FileKey = FileKey(input.hash()?);
 
     // Make storage_file_dir, if it doesn't already exist
     let storage_file_dir = storage_file_dir(storage_path, &key);
@@ -168,7 +168,7 @@ fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
                 // Store content
-                try!( input.store(&storage_file_path) );
+                input.store(&storage_file_path)?;
             }
             else {
                 return Err( From::from(e) );
@@ -177,9 +177,9 @@ fn store<T: Storable + Hashable>(storage_path: &Path, input: &T)
     }
 
     // Increment the ref count
-    let mut refcount: u32 = try!( get_refcount(storage_path, &key) );
+    let mut refcount: u32 = get_refcount(storage_path, &key)?;
     refcount += 1;
-    try!( set_refcount(storage_path, &key, refcount) );
+    set_refcount(storage_path, &key, refcount)?;
     Ok( key )
 }
 
@@ -188,8 +188,8 @@ fn get_refcount(storage_path: &Path, key: &FileKey) -> Result<u32, Error>
     let storage_refcount_path = storage_refcount_path(storage_path, key);
     match fs::metadata(&storage_refcount_path) {
         Ok(_) => {
-            let mut f = try!( File::open(&storage_refcount_path)
-                              .map_err(|e| { (e, "Unable to open refcount file") } ));
+            let mut f = File::open(&storage_refcount_path)
+                .map_err(|e| { (e, "Unable to open refcount file") } )?;
             match f.read_u32::<BigEndian>() {
                 Ok(u) => Ok(u),
                 Err(e) => {
@@ -218,15 +218,15 @@ fn set_refcount(storage_path: &Path, key: &FileKey, refcount: u32) -> Result<(),
 
     // If zero, delete the refcount file
     if refcount < 1 {
-        try!( fs::remove_file( &storage_refcount_path )
-              .map_err(|e| { (e, "Unable to remove refcount file") } ));
+        fs::remove_file( &storage_refcount_path )
+            .map_err(|e| { (e, "Unable to remove refcount file") } )?;
         return Ok(());
     }
 
     // Otherwise, write the new refcount
-    let mut f = try!( OpenOptions::new()
-                      .create(true).write(true).truncate(true).open(&storage_refcount_path)
-                      .map_err(|e| { (e, "Unable to open/create new refcount file") } ) );
-    try!(f.write_u32::<BigEndian>(refcount));
+    let mut f = OpenOptions::new()
+        .create(true).write(true).truncate(true).open(&storage_refcount_path)
+        .map_err(|e| { (e, "Unable to open/create new refcount file") } )?;
+    f.write_u32::<BigEndian>(refcount)?;
     Ok(())
 }

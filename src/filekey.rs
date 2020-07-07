@@ -36,7 +36,7 @@ impl FromSql for FileKey {
                 -> Result<Self, Box<StdError + Sync + Send>>
     {
         // use the inner type
-        let s = try!(<String>::from_sql(ty, raw));
+        let s = <String>::from_sql(ty, raw)?;
         Ok(FileKey(s))
     }
 

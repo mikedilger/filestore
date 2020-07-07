@@ -35,12 +35,12 @@ impl StdError for Error {
 // This is for the Developer and Log files
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!( f.write_str(&*self.description()) );
+        f.write_str(&*self.description())?;
         if ! self.message.is_empty() {
-            try!( write!(f, " = {}", self.message) );
+            write!(f, " = {}", self.message)?;
         }
         if self.source().is_some() {
-            try!( write!(f, ": {:?}", self.source().unwrap()) );
+            write!(f, ": {:?}", self.source().unwrap())?;
         }
         Ok(())
     }
@@ -54,7 +54,7 @@ impl fmt::Display for Error {
                 write!(f, "The file requested was not found.")
             }
             _ => {
-                try!(write!(f, "{}: ", self.io.description()));
+                write!(f, "{}: ", self.io.description())?;
                 self.io.fmt(f) // trust upstream?
             },
         }

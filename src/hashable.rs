@@ -31,15 +31,15 @@ impl Hashable for PathBuf {
         let mut hash = Box::new(Sha224::new());
 
         // Open the file
-        let mut file = try!(
+        let mut file =
             File::open(self)
-                .map_err(|e| { (e, "Cannot open content file for hashing") } ));
+                .map_err(|e| { (e, "Cannot open content file for hashing") } )?;
 
         // Digest 4096 bytes at a time
         let mut buf: [u8; 4096] = [0_u8; 4096];
         loop {
-            let count = try!( file.read(&mut buf)
-                              .map_err(|e| { (e, "Unable to read file to hash") } ));
+            let count = file.read(&mut buf)
+                .map_err(|e| { (e, "Unable to read file to hash") } )?;
             if count==0 { return Ok(hash.result_str()); }
             hash.input(&buf[..count]); // Add to hash input
         }
